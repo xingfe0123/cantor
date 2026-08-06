@@ -1,23 +1,24 @@
-(** Cantor.v — The set of 0-1 sequences is uncountable (diagonal argument)
+(** Cantor.v - Cantor's diagonal argument in the Rocq Prover
 
-    This file formalizes Cantor's diagonal argument in the Rocq Prover,
-    proving that the set of all infinite binary sequences (nat -> bool)
-    is uncountable.
+    This file formalizes Cantor's theorem: for any type X, there is no
+    surjection X -> (X -> bool). As a corollary, the set of all infinite
+    binary sequences (nat -> bool) is uncountable.
 
     Proof structure:
     1. [diagonal_not_in_range]: The diagonal sequence differs from every
-       row of any enumeration — purely constructive, no axioms needed.
-    2. [no_surjection_nat_seq01]: There is no surjection nat -> seq01 —
-       constructive, follows directly from (1).
-    3. [inj_to_nat_implies_surj_from_nat]: An injection seq01 -> nat
-       implies a surjection nat -> seq01 — uses classical logic
+       row of any enumeration - purely constructive, no axioms needed.
+    2. [no_surjection_general]: General Cantor's theorem - for any type X,
+       no surjection X -> (X -> bool) exists. Constructive.
+    3. [no_surjection_nat_seq01]: Specialization to nat - no surjection
+       nat -> seq01. Constructive, derived from (2).
+    4. [inj_to_nat_implies_surj_from_nat]: An injection seq01 -> nat
+       implies a surjection nat -> seq01 - uses classical logic
        (excluded_middle_informative + constructive_indefinite_description
        from ClassicalEpsilon).
-    4. [seq01_uncountable]: Main theorem — combines (2) and (3).
+    5. [seq01_uncountable]: Main theorem - combines (3) and (4).
 
     Axioms used: ClassicalEpsilon (constructive_indefinite_description,
-    excluded_middle_informative), which are consistent with Rocq's type
-    theory.
+    classic via Classical_Prop), consistent with Rocq's type theory.
 
     Tested on: Rocq Prover 9.1.1 (OCaml 5.4.1)
  *)
@@ -67,28 +68,49 @@ Lemma diagonal_not_in_range :
     diagonal f <> f n.
 Proof.
   intros f n H.
-  assert (Hnn : flip (f n n) = f n n).
-  { assert (H1 : diagonal f n = f n n).
-    { rewrite H. reflexivity. }
-    unfold diagonal in H1. rewrite H1. reflexivity. }
+  assert (H1 : diagonal f n = f n n).
+  { rewrite H. reflexivity. }
+  unfold diagonal in H1.
   destruct (f n n); discriminate.
+Qed.
+
+(* ================================================================== *)
+(** * General Cantor's Theorem (Constructive) *)
+
+(** For any type [X], there is no surjection [X -> (X -> bool)].
+    This is Cantor's theorem in its full generality: the "powerset"
+    of [X] (represented as characteristic functions [X -> bool]) is
+    strictly larger than [X] itself.
+
+    Proof: Given a surjection [f : X -> (X -> bool)], the diagonal
+    sequence [d x = flip (f x x)] must appear in the range of [f],
+    so [f x0 = d] for some [x0]. But then [f x0 x0 = d x0 = flip (f x0 x0)],
+    which is impossible. *)
+Theorem no_surjection_general :
+  forall (X : Type),
+    ~ exists f : X -> (X -> bool),
+      forall s : X -> bool, exists x : X, f x = s.
+Proof.
+  intros X Hexf.
+  destruct Hexf as [f Hsurj].
+  destruct (Hsurj (fun x => flip (f x x))) as [x Hx].
+  assert (Hfx : f x x = flip (f x x)).
+  { apply (f_equal (fun s => s x)) in Hx. simpl in Hx. exact Hx. }
+  destruct (f x x); discriminate.
 Qed.
 
 (* ================================================================== *)
 (** * No Surjection from Nat to Seq01 (Constructive) *)
 
 (** There is no surjection from [nat] to [seq01].
-    This follows directly from [diagonal_not_in_range]:
-    if [f] were surjective, [diagonal f] would be in its range. *)
+    This is a corollary of [no_surjection_general] with [X = nat]. *)
 Theorem no_surjection_nat_seq01 :
   ~ exists f : nat -> seq01, surjective f.
 Proof.
   intro H.
+  apply (no_surjection_general nat).
   destruct H as [f Hsurj].
-  assert (Hex : exists n, f n = diagonal f).
-  { apply Hsurj. }
-  destruct Hex as [n Hn].
-  exact (diagonal_not_in_range f n (eq_sym Hn)).
+  exists f. exact Hsurj.
 Qed.
 
 (* ================================================================== *)
