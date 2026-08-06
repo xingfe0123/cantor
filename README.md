@@ -48,11 +48,26 @@ make
 
 ## Axioms
 
-This proof uses `ClassicalEpsilon` which provides:
-- `excluded_middle_informative : forall P:Prop, {P} + {~P}`
-- `constructive_indefinite_description : forall (A:Type) (P:A->Prop), (exists x, P x) -> {x:A | P x}`
+`Print Assumptions seq01_uncountable` outputs:
 
-These are consistent with Rocq/Coq's type theory and are standard classical axioms.
+```
+Axioms:
+ClassicalEpsilon.constructive_indefinite_description :
+  forall (A : Type) (P : A -> Prop), (exists x : A, P x) -> {x : A | P x}
+Classical_Prop.classic : forall P : Prop, P \/ ~ P
+```
+
+- `classic` (from `Classical_Prop`): excluded middle in `Prop`
+- `constructive_indefinite_description` (from `ClassicalEpsilon`): eliminates
+  `exists` in `Prop` to `{x | P x}` in `Type`
+
+The proof uses `excluded_middle_informative` (a derived theorem, not an axiom)
+to decide membership in the range of `f`. Both axioms are consistent with
+Rocq/Coq's type theory.
+
+The first two lemmas (`diagonal_not_in_range`, `no_surjection_nat_seq01`)
+are fully constructive — `Print Assumptions` reports "Closed under the global
+context" for both.
 
 ## License
 

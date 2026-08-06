@@ -5,3 +5,4 @@
 .*.aux
 .lia.cache
 .nia.cache
+.coqdeps.d
