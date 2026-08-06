@@ -17,7 +17,15 @@ jobs:
           ocaml-compiler: 5.4.x
 
       - name: Install Rocq
-        run: opam install -y rocq-prover
+        run: opam install -y coq
 
       - name: Build
         run: eval $(opam env) && make
+
+      - name: Check axioms
+        run: |
+          eval $(opam env)
+          echo 'From CantorDiagonal Require Import Cantor.' > /tmp/check.v
+          echo 'Print Assumptions seq01_uncountable.' >> /tmp/check.v
+          echo 'Print Assumptions no_surjection_general.' >> /tmp/check.v
+          rocq compile -Q . CantorDiagonal /tmp/check.v

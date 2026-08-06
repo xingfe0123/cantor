@@ -59,6 +59,8 @@ Definition const_seq : seq01 := fun _ => true.
 
 (** The diagonal sequence differs from every row of any enumeration.
     This is the heart of Cantor's argument and requires no axioms.
+    (Note: [no_surjection_general] below generalizes this to any type X;
+    this lemma is kept as a standalone nat-specific illustration.)
 
     Proof: If [diagonal f = f n], then evaluating at index [n] gives
     [flip (f n n) = f n n], which is impossible since [flip b <> b]
